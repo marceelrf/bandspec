@@ -27,6 +27,9 @@ v1 <- \(x) voigtian(x, x0 = 1071, sigma = 9, gamma = 5,amp = 28.5)
 v2 <- \(x) voigtian(x, x0 = 1130, sigma = 9, gamma = 5,amp = 22.5)
 v3 <- \(x) voigtian(x, x0 = 1165, sigma = 9, gamma = 5,amp = 3.5)
 v4 <- \(x) voigtian(x, x0 = 1234, sigma = 9, gamma = 9,amp = 2)
+v5 <- \(x) voigtian(x, x0 = 1234, sigma = 9, gamma = 9,amp = 2)
+
+tot <- \(x) v1(x) + v2(x) + v3(x) + v4(x)
 
 Region %>%
   spec_select(CoHA100) %>%
@@ -34,7 +37,8 @@ Region %>%
   geom_function(fun = v1) +
   geom_function(fun = v2) +
   geom_function(fun = v3) +
-  geom_function(fun = v4)
+  geom_function(fun = v4) +
+  geom_function(fun = tot, col = "red")
 
 #Initial parameters
 params <- tibble(x0 = c(1070, 1130, 1172, 1230),
