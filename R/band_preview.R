@@ -1,9 +1,9 @@
 #' Preview spectral bands
 #'
-#' @param .data A data.frame/tibble with spectral data
-#' @param spectrum Character. Name of the column containing the spectrum to preview
+#' @param .data A numeric vector of wavenumbers OR a data.frame/tibble with spectral data
+#' @param spectrum Character. Name of the column containing the spectrum to preview (only for tibble)
 #' @param params A tibble created with band_params() containing band parameters
-#' @param wn_col Character. Name of the wavenumber column
+#' @param wn_col Character. Name of the wavenumber column (only for tibble)
 #' @param show_sum Logical. Show the sum of all bands? Default is TRUE
 #' @param colors Character vector. Colors for bands. NULL uses ggplot2 default colors
 #'
@@ -11,38 +11,48 @@
 #' @export
 band_preview <- function(.data, spectrum = NULL, params, wn_col = NULL, show_sum = TRUE, colors = NULL) {
 
-  # Validações padrão tidyspec para tibble
-  if (missing(.data)) {
-    stop("Argument '.data' is missing. Please provide a data.frame/tibble.")
-  }
-  if (!inherits(.data, c("data.frame", "tbl", "tbl_df"))) {
-    stop("Argument '.data' must be a data.frame/tibble.")
-  }
-  if (is.null(wn_col)) {
-    wn_col <- get0(".wn_col_default", envir = tidyspec_env,
-                   ifnotfound = NULL)
-    if (is.null(wn_col)) {
-      stop("wn_col not specified and no default defined with set_spec_wn().")
-    } else {
-      warn_missing_param_once("wn_col", wn_col)
+  # Determinar se .data é um vetor ou tibble
+  is_vector <- is.numeric(.data) && is.null(dim(.data))
+
+  if (is_vector) {
+    # É um vetor
+    x <- .data
+    has_spectrum <- FALSE
+
+  } else {
+    # É um tibble - validações padrão tidyspec
+    if (missing(.data)) {
+      stop("Argument '.data' is missing. Please provide a numeric vector or data.frame/tibble.")
     }
-  }
-  if (!wn_col %in% colnames(.data)) {
-    stop(paste0("Column '", wn_col, "' not found in the input data."))
-  }
+    if (!inherits(.data, c("data.frame", "tbl", "tbl_df"))) {
+      stop("Argument '.data' must be a numeric vector or a data.frame/tibble.")
+    }
+    if (is.null(wn_col)) {
+      wn_col <- get0(".wn_col_default", envir = tidyspec_env,
+                     ifnotfound = NULL)
+      if (is.null(wn_col)) {
+        stop("wn_col not specified and no default defined with set_spec_wn().")
+      } else {
+        warn_missing_param_once("wn_col", wn_col)
+      }
+    }
+    if (!wn_col %in% colnames(.data)) {
+      stop(paste0("Column '", wn_col, "' not found in the input data."))
+    }
 
-  # Verificar se spectrum foi fornecido
-  has_spectrum <- !is.null(spectrum)
-  if (has_spectrum && !spectrum %in% colnames(.data)) {
-    stop(paste0("Column '", spectrum, "' not found in the input data."))
-  }
+    # Verificar se spectrum foi fornecido
+    has_spectrum <- !is.null(spectrum)
+    if (has_spectrum && !spectrum %in% colnames(.data)) {
+      stop(paste0("Column '", spectrum, "' not found in the input data."))
+    }
 
-  # Extrair vetor x do tibble
-  x <- .data[[wn_col]]
+    # Extrair vetor x do tibble
+    x <- .data[[wn_col]]
 
-  # Extrair y_observed se fornecido
-  if (has_spectrum) {
-    y_obs <- .data[[spectrum]]
+    # Extrair y_observed se fornecido
+    if (has_spectrum) {
+      y_obs <- .data[[spectrum]]
+    }
   }
 
   # Validar params
